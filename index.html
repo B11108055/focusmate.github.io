@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FocusMate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #fefbf7;
+      color: #1a4322;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 60px;
+      background-color: #fefbf7;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background-color: #fefbf7; /* pastikan ada warna latar */
+
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo img {
+      height: 80px;
+      margin-right: 15px;
+      position: relative;
+      top: -5px;
+    }
+
+    .logo strong {
+      font-size: 1.5rem;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 35px;
+    }
+
+    nav a {
+      text-decoration: none;
+      font-weight: 600;
+      color: #1a4322;
+      font-size: 1.3rem;
+    }
+
+    .try-btn {
+      background-color: #e7edff;
+      color: #1a4322;
+      border-radius: 30px;
+      padding: 10px 22px;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 1.3rem;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .container {
+      padding: 80px 40px;
+      max-width: 1000px;
+      margin: auto;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    .focusmate-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .scribble-img {
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 130%;
+      height: auto;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 400;
+      max-width: 800px;
+      margin: 0 auto 60px;
+    }
+
+    .main-img {
+      width: 100%;
+      max-width: 500px;
+      height: auto;
+      margin-top: 20px;
+    }
+      nav a, .try-btn {
+      position: relative;
+    }
+
+    nav a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -4px;
+      width: 100%;
+      height: 3px;
+      background-color: #d4ddff;
+      border-radius: 50px;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    nav a:hover::after {
+      transform: scaleX(1);
+    }
+
+.try-btn:hover {
+      background-color: #1a4322;
+      color: #ffffff;
+    }
+.highlight-focusmate {
+      position: relative;
+      display: inline-block;
+      z-index: 0;
+    }
+
+    .highlight-focusmate::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 5px;
+      width: 100%;
+      height: 16px;
+      background: #f1f56e;
+      transform: skew(-8deg);
+      z-index: -1;
+    }
+.highlight-number {
+  position: relative;
+  display: inline-block;
+  z-index: 0;
+}
+
+.highlight-number::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 5px;
+  width: 100%;
+  height: 8px; /* thinner than before */
+  background: #f1f56e;
+  transform: skew(-8deg);
+  z-index: -1;
+}
+.source-text {
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.95rem;
+  color: #888888; /* soft gray */
+  margin-top: 12px;
+  text-align: left;
+}
+
+.slider-container {
+  position: relative;
+  overflow: hidden;
+  max-width: 100%;
+  padding: 60px 50px; /* adds space so buttons aren't cut */
+  box-sizing: border-box;
+}
+
+.slider-track {
+  display: flex;
+  transition: transform 0.4s ease-in-out;
+
+}
+
+.slide-card {
+  flex: 0 0 400px; /* wider rectangle */
+  margin-right: 30px;
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  min-height: 260px;
+  box-sizing: border-box;
+  text-align: left; /* left align text */
+}
+
+.slide-card h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 10px 0;
+}
+
+.slide-card p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.slider-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #e7edff;
+  border: none;
+  border-radius: 50%;
+  padding: 12px;
+  cursor: pointer;
+  z-index: 2;
+  font-size: 1.2rem;
+}
+
+.slider-nav.left {
+  left: 10px;
+}
+
+.slider-nav.right {
+  right: 10px;
+}
+.image-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.image-slot img {
+  width: 280px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.image-slot img:hover {
+  transform: scale(1.03);
+}
+.portfolio-group {
+  margin-bottom: 80px;
+  background-color: #fefcf9;
+  padding: 30px;
+  border-radius: 24px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+}
+
+.portfolio-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a4322;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.scroll-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.portfolio-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  gap: 20px;
+  padding-bottom: 10px;
+  scrollbar-width: none;
+}
+
+.portfolio-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-btn {
+  background-color: #e7edff;
+  color: #1a4322;
+  border: none;
+  border-radius: 999px;
+  font-size: 1.2rem;
+  padding: 10px 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  transition: background-color 0.3s ease;
+}
+
+.scroll-btn:hover {
+  background-color: #1a4322;
+  color: #fff;
+}
+
+.portfolio-img {
+  flex: 0 0 auto;
+  width: 280px;
+  height: 180px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  cursor: zoom-in;
+  background-color: white;
+}
+
+.portfolio-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.portfolio-img:hover img {
+  transform: scale(1.03);
+}
+
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="logo.png" alt="FocusMate logo" />
+    </div>
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#why">Why FocusMate</a>
+      <a href="#features">Features</a>
+      <a href="#demo">Demo</a>
+      <a href="#creator">Our Creator</a>
+    </nav>
+    <a class="try-btn" href="focusmate_index_final.html">Let’s Try Out</a>
+  </header>
+
+  <main id="home" class="container">
+    <h1>Welcome to <span class="highlight-focusmate">FocusMate</span></h1>
+    <h2>Your smart AI-powered study buddy that helps you stay focused, beat distractions, and build better work habits.</h2>
+    <img src="image trans.png" alt="Distracted Student" class="main-img" />
+
+    <section id="why" style="margin: 60px 30px;">
+  <h2 style="text-align: center; font-size: 2.5rem; font-weight: 700; max-width: 700px; margin: 0 auto 20px;">Why Staying Focused Is Harder Than Ever?</h2>
+  <p style="text-align: center; font-size: 1.2rem; max-width: 700px; margin: 0 auto 60px;">In a world full of constant pings, multitasking, and mental fatigue, staying focused isn’t just a challenge—it’s a daily battle.</p>
+
+<div class="data-row" style="display: flex; align-items: stretch; justify-content: space-between; gap: 30px; flex-wrap: wrap;">
+  <div style="flex: 1; background-color: white; border-radius: 20px; padding: 30px; box-sizing: border-box; text-align: center;">
+<img src="data1.png" alt="Phone Distraction" style="width: 100%; max-width: 126px; margin-bottom: 20px; border-radius: 12px;">
+    <p style="font-size: 2rem; font-weight: 700; margin: 4px; text-align: left;">
+  <span class="highlight-number">89%</span>
+</p>
+    <p style="font-weight: 600; margin-top: 5px; text-align: left;">of students say their biggest distraction is their phone or social media.</p>
+    <p class="source-text">— Common Sense Media — Tweens, Teens, Tech & Distractions</p>
+  </div>
+
+  <div style="flex: 1; background-color: white; border-radius: 20px; padding: 30px; box-sizing: border-box; text-align: center;">
+<img src="data2.png" alt="Time to Refocus" style="width: 100%; max-width: 140px; margin-bottom: 20px; border-radius: 12px;">
+   <p style="font-size: 2rem; font-weight: 700; margin: 6px; text-align: left;">
+  <span class="highlight-number">23 minutes</span>
+</p>
+    <p style="font-weight: 600; margin-top: 5px; text-align: left;">to regain focus after being distracted.</p>
+<p class="source-text">— Gloria Mark, University of California, Irvine</p>
+  </div>
+
+  <div style="flex: 1; background-color: white; border-radius: 20px; padding: 30px; box-sizing: border-box; text-align: center;">
+<img src="data3.png" alt="Multitasking Effect" style="width: 100%; max-width: 160px; margin-bottom: 20px; border-radius: 12px;">
+    <p style="font-size: 2rem; font-weight: 700; margin: 0; text-align: left;">
+  <span class="highlight-number">40%</span>
+</p>
+    <p style="font-weight: 600; margin-top: 5px; text-align: left;">Multitasking can reduce productivity.</p>
+<p class="source-text">— American Psychological Association (APA)</p>
+  </div>
+</div>
+
+      <section id="features" style="margin: 60px 30px;">
+    <div class="slider-container">
+  <h2 style="margin-top: 20px; margin-bottom: 30px; font-size: 1.8rem; font-weight: 700; color: #1a4322; text-align: center;">
+  How FocusMate Helps You Get Back on Track
+</h2>
+ <button class="slider-nav left" onclick="moveSlide(-1)">←</button>
+<button class="slider-nav right" onclick="moveSlide(1)">→</button>
+
+
+  <div class="slider-track" id="sliderTrack">
+    <div class="slide-card" style="background:#ffffff;">
+      <div style="font-size: 1.5rem;">🎯</div>
+      <h3>AI Focus Detection</h3>
+      <p>Your webcam checks if you're focused or distracted in real-time. Stay aware of your attention level without manual tracking.</p>
+    </div>
+    <div class="slide-card" style="background:#eef778;">
+      <div style="font-size: 1.5rem;">⏰</div>
+      <h3>Smart Timer</h3>
+      <p>Use a built-in timer to structure your sessions. Whether Pomodoro or your own rhythm, stay productive and balanced.</p>
+    </div>
+    <div class="slide-card" style="background:#cddbfe;">
+      <div style="font-size: 1.5rem;">🔔</div>
+      <h3>Distraction Alerts</h3>
+      <p>If you lose focus, the system gently notifies you with a sound or visual alert—helping you get back on track quickly.</p>
+    </div>
+    <div class="slide-card" style="background:#1d3a2a; color: white;">
+      <div style="font-size: 1.5rem;">📝</div>
+      <h3>Daily Goals List</h3>
+      <p>Stay organized by writing down your tasks for the day. Check them off as you go to stay motivated, focused, and in control of your progress.</p>
+    </div>
+    <div class="slide-card" style="background:#eee5db;">
+      <div style="font-size: 1.5rem;">🎧</div>
+      <h3>Lofi Music Player</h3>
+      <p>Play relaxing lofi beats or ambient sounds directly from YouTube to stay in flow and block out distractions.</p>
+    </div>
+  </div>
+</div>
+<script>
+  let slideIndex = 0;
+  const slideTrack = document.getElementById('sliderTrack');
+  const cardWidth = 340; // 300px card + 40px margin
+  const totalCards = slideTrack.children.length;
+
+  function moveSlide(direction) {
+    slideIndex += direction;
+    if (slideIndex < 0) slideIndex = 0;
+    if (slideIndex > totalCards - 1) slideIndex = totalCards - 1;
+    slideTrack.style.transform = `translateX(-${slideIndex * cardWidth}px)`;
+  }
+</script>
+
+        <section id="demo" style="padding: 100px 30px; position: relative; background-color: #fefbf7;">
+  <!-- Title -->
+  <h2 style="font-size: 2.5rem; font-weight: 700; color: #1a4322; text-align: center; margin-bottom: 60px;">
+    See FocusMate in Action
+  </h2>
+
+  <!-- YouTube video container -->
+  <div style="
+  width: 100%;
+  max-width: 800px;
+  margin: auto;
+  overflow: hidden;
+  clip-path: inset(0 round 20px);
+">
+  <iframe
+    width="100%"
+    height="450"
+    src="https://www.youtube.com/embed/jfKfPfyJRdk"
+    title="Lofi study girl"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+    style="display: block;">
+  </iframe>
+</div>
+
+  <!-- CTA button -->
+  <div style="text-align: center; margin-top: 50px;">
+    <a href="focusmate_index_final.html" style="display: inline-block; background-color: #1a4322; color: #fff; padding: 14px 30px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 1rem;">
+      Try Demo
+    </a>
+  </div>
+</section>
+<section id="creator" style="padding: 0px 20px; background-color: #fefbf7;">
+<div style="display: flex; max-width: 100%; align-items: flex-start; margin-top: 80px; gap: 40px;">
+
+    <!-- Profile Image & Arrow -->
+    <div style="position: relative; flex: 1 1 360px; max-width: 380px;">
+      <img src="profile.png" alt="Carisha Machiko" style="width: 100%; height: auto;margin-left: -120px">
+      <img src="scribble arrow.png" alt="Arrow" style="position: absolute; top: -60px; left: 170px; width: 160px;">
+    </div>
+
+    <!-- Text -->
+<div style="flex: 1; max-width: 2000px; text-align: left;">
+      <h2 style="font-size: 2.2rem; font-weight: 700; color: #1a4322; margin: 0;margin-left: -50px; margin-right: 10px">
+        Hi! My name is <span style="color: #f4743b;">Carisha</span>
+      </h2>
+      <img src="scribble line.png" alt="Underline" style="width: 160px; margin: 0px 0 5px 195px;">
+
+      <p style="font-size: 1rem; color: #333; line-height: 1.7; margin-top: 0;margin-left: -50px">
+        I'm a third-year Business Administration student at National Taiwan University of Science & Technology. I'm interested in how artificial intelligence can support smarter business decisions and generate innovative solutions.
+        <br><br>
+        This website is part of my final project for the Applications of Artificial Intelligence class. It serves as a space to share what I've learned, reflect on key concepts, and demonstrate how AI can be applied in real-world business contexts.
+      </p>
+    </div>
+  </div>
+</section>
+<section id="portfolio" style="padding: 100px 40px; max-width: 1300px; margin: 0 auto;">
+  <h2 style="text-align: center; font-size: 2.4rem; font-weight: 700; color: #1a4322; margin-bottom: 50px;">
+    ✨ My AI Project Portfolio ✨
+  </h2>
+
+  <!-- Portfolio Group Template -->
+  <div class="portfolio-group">
+    <h3 class="portfolio-title">Google Mediapipe</h3>
+    <div class="scroll-wrapper">
+      <button class="scroll-btn left" onclick="scrollSlide(this, -1)">←</button>
+      <div class="portfolio-scroll">
+        <div class="portfolio-img" onclick="openModal(this)"><img src="mediapipe week 2.png" alt=""></div>
+        <div class="portfolio-img" onclick="openModal(this)"><img src="mediapipe week 2 (5).png" alt=""></div>
+        <div class="portfolio-img" onclick="openModal(this)"><img src="mediapipe week 4 (2).png" alt=""></div>
+        <div class="portfolio-img" onclick="openModal(this)"><img src="mediapipe week 4 (3).jpeg" alt=""></div>
+        <div class="portfolio-img" onclick="openModal(this)"><img src="mediapipe week 5 (2).png" alt=""></div>
+      </div>
+      <button class="scroll-btn right" onclick="scrollSlide(this, 1)">→</button>
+    </div>
+  </div>
+
+  <!-- Teachable Machine -->
+<div class="portfolio-group">
+  <h3 class="portfolio-title">Teachable Machine & Streamlit</h3>
+  <div class="portfolio-scroll">
+    <div class="portfolio-img" onclick="openModal(this)">
+      <img src="Teachable Machine week 5.png" alt="Teachable Machine Example 1">
+    </div>
+    <div class="portfolio-img" onclick="openModal(this)">
+      <img src="streamlit week 5 (3).png" alt="Teachable Machine Example 2">
+    </div>
+  </div>
+</div>
+
+  <div class="portfolio-group">
+    <h3 class="portfolio-title">LLM (API)</h3>
+    <div class="scroll-wrapper">
+      <button class="scroll-btn left" onclick="scrollSlide(this, -1)">←</button>
+      <div class="portfolio-scroll">
+        <div class="portfolio-img" onclick="openModal(this)"><img src="LLM week 5 (4).jpeg" alt=""></div>
+        <div class="portfolio-img" onclick="openModal(this)"><img src="LLM2.png" alt=""></div>
+        <div class="portfolio-img" onclick="openModal(this)"><img src="LLM3.png" alt=""></div>
+        <div class="portfolio-img" onclick="openModal(this)"><img src="LLM4.png" alt=""></div>
+        <div class="portfolio-img" onclick="openModal(this)"><img src="LLM5.png" alt=""></div>
+      </div>
+      <button class="scroll-btn right" onclick="scrollSlide(this, 1)">→</button>
+    </div>
+  </div>
+
+  <div class="portfolio-group">
+    <h3 class="portfolio-title">LangChain</h3>
+    <div class="scroll-wrapper">
+      <button class="scroll-btn left" onclick="scrollSlide(this, -1)">←</button>
+      <div class="portfolio-scroll">
+        <div class="portfolio-img" onclick="openModal(this)"><img src="LC1.png" alt=""></div>
+        <div class="portfolio-img" onclick="openModal(this)"><img src="LC2.png" alt=""></div>
+        <div class="portfolio-img" onclick="openModal(this)"><img src="LC3.png" alt=""></div>
+        <div class="portfolio-img" onclick="openModal(this)"><img src="LC4.png" alt=""></div>
+        <div class="portfolio-img" onclick="openModal(this)"><img src="LC5.png" alt=""></div>
+      </div>
+      <button class="scroll-btn right" onclick="scrollSlide(this, 1)">→</button>
+    </div>
+  </div>
+</section>
+
+<!-- Modal -->
+<div id="modal" onclick="closeModal()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:9999;">
+  <span onclick="closeModal()" style="position:absolute; top:20px; right:40px; font-size:2rem; color:white; cursor:pointer;">&times;</span>
+  <img id="modal-img" style="max-width:90%; max-height:90%; border-radius:14px; box-shadow:0 8px 16px rgba(0,0,0,0.5);" />
+</div>
+
+
+<script>
+  function scrollSlide(button, direction) {
+    const container = button.parentElement.querySelector('.portfolio-scroll');
+    const scrollAmount = 320; // adjust based on card width
+    container.scrollLeft += direction * scrollAmount;
+  }
+
+  function openModal(el) {
+    const modal = document.getElementById('modal');
+    const modalImg = document.getElementById('modal-img');
+    modalImg.src = el.querySelector('img').src;
+    modal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+  }
+</script>
+
+<!-- Contact Section -->
+<section style="margin: 20px 10px 10px 20px; background-color: #fefbf7; display: flex; align-items: center; justify-content: space-between; gap: 60px; flex-wrap: wrap;">
+
+  <!-- Contact Text -->
+  <div style="flex: 1; min-width: 300px; max-width: 600px; text-align: left;">
+    <h2 style="font-size: 2rem; font-weight: 700; color: #1a4322; margin-bottom: 30px;">
+      Feel free to reach out for collaboration, internships, or just to connect!
+    </h2>
+    <p style="font-size: 1.1rem; line-height: 1.8; color: #222221;">
+      Email: <a href="mailto:machikocarisha@gmail.com" style="color: #222221;">machikocarisha@gmail.com</a><br>
+      LinkedIn: <a href="https://www.linkedin.com/in/carisha-machiko-a82187267/" target="_blank" style="color: #222221;">Carisha Machiko</a><br>
+      Phone: <a href="tel:+886908590347" style="color: #222221;">+886 908-590-347</a>
+    </p>
+  </div>
+
+  <!-- Contact Image -->
+  <div style="flex: 1; min-width: 450px; text-align: right;">
+    <img src="contact.png" alt="Contact Illustration" style="max-width: 100%; height: auto;">
+  </div>
+</section>
+
+</main>
+  <footer style="margin: 100px 30px 20px 30px; background-color: #e7edff; padding: 30px 30px; border-radius: 20px; text-align: center;">
+    <div style="font-weight: 600; font-size: 1rem;">© 2025 FocusMate. All rights reserved.</div>
+  </footer>
+</body>
+</html>
+

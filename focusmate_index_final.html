@@ -1,0 +1,282 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FocusMate - AI Study Buddy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- Required Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #fefbf7;
+      color: #1a4322;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      padding: 40px 60px;
+      gap: 40px;
+    }
+    .left, .right {
+      flex: 1 1 45%;
+    }
+   .webcam, .timer, .goals, .quote, .streak, .lofi {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    .webcam {
+      position: relative;
+      background-color: #eef2e1;
+      text-align: center;
+      height: 300px;
+    }
+    .alert {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fdd;
+      padding: 8px 16px;
+      border-radius: 20px;
+      display: none;
+      font-weight: bold;
+    }
+    #timerDisplay {
+      font-size: 3rem;
+      text-align: center;
+      margin: 10px 0;
+    }
+    .button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-weight: 600;
+      border: 2px solid #1a4322;
+      border-radius: 10px;
+      background-color: white;
+      cursor: pointer;
+      color: #1a4322;
+    }
+    .button.start {
+      background-color: #1a4322;
+      color: white;
+    }
+    iframe {
+      width: 100%;
+      height: 300px;
+      border: none;
+      border-radius: 12px;
+    }
+    .goal-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .goal-item input[type="text"] {
+      font-size: 18px;
+      padding: 6px;
+      width: 80%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-left: 20px;
+    }
+    .goal-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="left">
+      <div class="webcam">
+        <div class="alert" id="alertText">⚠️ You seem distracted</div>
+        <div id="webcam-container" style="width: 100%; height: 100%;"></div>
+      </div>
+      <div class="timer">
+        <h2>Timer</h2>
+        <input id="minutesInput" min="1" placeholder="Enter minutes" type="number"/>
+        <div id="timerDisplay">00:00</div>
+        <button class="button start" onclick="startTimer()">Start</button>
+        <button class="button" onclick="resetTimer()">Reset</button>
+      </div>
+      <div class="quote">
+        <h2>Quote of the Day</h2>
+        <p id="quote">Stay focused and never give up!</p>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="goals">
+        <h2>Daily Goals</h2>
+        <div class="goal-item"><input type="checkbox"><input type="text" placeholder="Goal 1"></div>
+        <div class="goal-item"><input type="checkbox"><input type="text" placeholder="Goal 2"></div>
+        <div class="goal-item"><input type="checkbox"><input type="text" placeholder="Goal 3"></div>
+      </div>
+      <div class="lofi">
+        <h2>Lofi Music</h2>
+        <iframe allowfullscreen src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=0"></iframe>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const URL = "https://teachablemachine.withgoogle.com/models/1TYu6EhId/";
+  let model, webcam, maxPredictions;
+  const alertSound = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+
+  let distractionStart = null;
+  const DISTRACTION_DELAY = 3000;
+
+  let timerInterval;
+  let remainingTime = 0;
+
+  let tracking = false;
+  let focusSeconds = 0;
+  let distractionSeconds = 0;
+  let neutralSeconds = 0;
+  let lastTrackTime = Date.now(); // for accurate per-second counting
+  let totalSecondsTarget = 0; // To store the full duration (e.g., 1500 for 25min)
+
+
+  async function init() {
+    const modelURL = URL + "model.json";
+    const metadataURL = URL + "metadata.json";
+
+    model = await tmImage.load(modelURL, metadataURL);
+    webcam = new tmImage.Webcam(400, 300, false);
+    await webcam.setup();
+    await webcam.play();
+    window.requestAnimationFrame(loop);
+
+    document.getElementById("webcam-container").appendChild(webcam.canvas);
+    maxPredictions = model.getTotalClasses();
+  }
+
+  async function loop() {
+    webcam.update();
+    await predict();
+    window.requestAnimationFrame(loop);
+  }
+
+  async function predict() {
+    const prediction = await model.predict(webcam.canvas);
+    const now = Date.now();
+
+    const focused = prediction.find(p => p.className === "Class 1");
+    const distracted = prediction.find(p => p.className === "Class 2");
+
+    const isFocused = focused && focused.probability >= 0.8;
+    const isDistracted = distracted && distracted.probability >= 0.95;
+
+    // Log class confidence for debugging
+    console.log(`🔎 Class 1: ${focused?.probability.toFixed(2)}, Class 2: ${distracted?.probability.toFixed(2)}`);
+
+    if (tracking) {
+      if (now - lastTrackTime >= 1000) {
+        if (isFocused) {
+          focusSeconds++;
+          console.log(`🟢 Focused +1 → ${focusSeconds}s`);
+        } else if (isDistracted) {
+          distractionSeconds++;
+          console.log(`🔴 Distracted +1 → ${distractionSeconds}s`);
+        } else {
+          neutralSeconds++;
+          console.log(`⚪ Neutral +1 → ${neutralSeconds}s`);
+        }
+        lastTrackTime = now;
+      }
+
+      // Show alert only while timer is running and distracted for > 3s
+      if (isDistracted) {
+        if (!distractionStart) distractionStart = now;
+        const distractedDuration = now - distractionStart;
+        if (distractedDuration > DISTRACTION_DELAY) {
+          document.getElementById("alertText").style.display = "block";
+          alertSound.play();
+        }
+      } else {
+        distractionStart = null;
+        document.getElementById("alertText").style.display = "none";
+      }
+    } else {
+      document.getElementById("alertText").style.display = "none";
+    }
+  }
+
+  function startTimer() {
+    const input = parseInt(document.getElementById("minutesInput").value || "0");
+    if (isNaN(input) || input <= 0) {
+      alert("Please enter a valid number of minutes.");
+      return;
+    }
+
+    remainingTime = input * 60;
+    focusSeconds = 0;
+    distractionSeconds = 0;
+    neutralSeconds = 0;
+    tracking = true;
+    lastTrackTime = Date.now();
+
+    clearInterval(timerInterval);
+    updateTimerDisplay();
+
+    timerInterval = setInterval(() => {
+      remainingTime--;
+      updateTimerDisplay();
+
+      if (remainingTime <= 0) {
+        clearInterval(timerInterval);
+        tracking = false;
+        alert("⏰ Time's up!");
+      }
+    }, 1000);
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    remainingTime = 0;
+    tracking = false;
+    updateTimerDisplay();
+    document.getElementById("alertText").style.display = "none";
+  }
+
+  function updateTimerDisplay() {
+    const minutes = Math.floor(remainingTime / 60);
+    const seconds = remainingTime % 60;
+    document.getElementById("timerDisplay").textContent =
+      `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+  // Quote of the Day
+  const quotes = [
+    "Stay focused and never give up!",
+    "Small progress is still progress.",
+    "Discipline is doing it even when you don’t feel like it.",
+    "Every day is a chance to get better.",
+  ];
+  document.getElementById("quote").textContent = quotes[Math.floor(Math.random() * quotes.length)];
+
+  window.onload = () => {
+    init();
+  };
+</script>
+
+</body>
+</html>
